@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_lab_05_login_start/home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'login.dart';
+import 'home.dart';
 
 class Welcome extends StatefulWidget {
   @override
@@ -8,8 +11,31 @@ class Welcome extends StatefulWidget {
 
 class _WelcomeState extends State<Welcome> {
   //initState
+  @override
+  void initState() {
+    checkLogin();
+    super.initState();
+  }
 
   //Function to check user detail
+  void checkLogin() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String email = prefs.getString("user");
+    final String password = prefs.getString("password");
+
+    if (email != null) {
+      var d = Duration(microseconds: 1);
+      Future.delayed(d, () {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Home(email, password),
+          ),
+          (route) => false,
+        );
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

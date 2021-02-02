@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:email_validator/email_validator.dart';
+import 'package:flutter_lab_05_login_start/home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginForm extends StatefulWidget {
   @override
@@ -7,9 +10,114 @@ class LoginForm extends StatefulWidget {
 
 class _LoginFormState extends State<LoginForm> {
   String errmsg = "";
-  String email = "";
-  String password = "";
   final _formKey = GlobalKey<FormState>();
+
+  TextEditingController _emailController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
+
+  void login() {
+    //Code for Login
+    FocusScope.of(context).unfocus(); //หุบแป้น
+    bool passValidate = _formKey.currentState.validate();
+    errmsg = "";
+    if (passValidate) {
+      if (_passwordController.text == 'x') {
+        saveUser();
+        //_emailController.dispose();
+        //_passwordController.dispose();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                Home(_emailController.text, _passwordController.text),
+          ),
+        );
+      }
+    } else {
+      errmsg = "Wrong password!!";
+    }
+  }
+
+  void saveUser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString("user", _emailController.text);
+    prefs.setString("password", _passwordController.text);
+  }
+
+  TextFormField getEmail() {
+    return TextFormField(
+      controller: _emailController,
+      validator: (String inputEmail) {
+        if (inputEmail.isEmpty) {
+          return "Please input email";
+        } else {
+          if (!EmailValidator.validate(inputEmail)) {
+            return "Plese input valid email address";
+          }
+          return null;
+        }
+      },
+      keyboardType: TextInputType.emailAddress,
+      decoration: InputDecoration(
+        labelText: "Email",
+        hintText: "Enter your email",
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        suffixIcon: Icon(
+          Icons.email,
+          color: Colors.grey[700],
+          size: 20.0,
+        ),
+      ),
+    );
+  }
+
+  TextFormField getPass() {
+    return TextFormField(
+      controller: _passwordController,
+      validator: (String inputPassword) {
+        if (inputPassword.isEmpty) {
+          return "Please input Password";
+        } else {
+          return null;
+        }
+      },
+      obscureText: true,
+      decoration: InputDecoration(
+        labelText: "Password",
+        hintText: "Enter your password",
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        suffixIcon: Icon(
+          Icons.lock,
+          color: Colors.grey[700],
+          size: 20.0,
+        ),
+      ),
+    );
+  }
+
+  SizedBox getLoginBt() {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: RaisedButton(
+        color: Colors.grey,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+          side: BorderSide(color: Colors.white),
+        ),
+        child: Text(
+          "Login",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 23,
+          ),
+        ),
+        onPressed: login,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -20,94 +128,14 @@ class _LoginFormState extends State<LoginForm> {
         child: Column(
           children: [
             //---Email---
-            TextFormField(
-              validator: (String inputEmail) {
-                if (inputEmail.isEmpty) {
-                  return "Please input email";
-                } else {
-                  return null;
-                }
-              },
-              onChanged: (String inputEmail) {
-                setState(() {
-                  email = inputEmail;
-                });
-              },
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                labelText: "Email",
-                hintText: "Enter your email",
-                floatingLabelBehavior: FloatingLabelBehavior.always,
-                suffixIcon: Icon(
-                  Icons.email,
-                  color: Colors.grey[700],
-                  size: 20.0,
-                ),
-              ),
-            ),
-
+            getEmail(),
             SizedBox(height: 10),
 
             //---Password---
-            TextFormField(
-              validator: (String inputPassword) {
-                if (inputPassword.isEmpty) {
-                  return "Please input Password";
-                } else {
-                  return null;
-                }
-              },
-              onChanged: (String inputPassword) {
-                setState(() {
-                  password = inputPassword;
-                });
-              },
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: "Password",
-                hintText: "Enter your password",
-                floatingLabelBehavior: FloatingLabelBehavior.always,
-                suffixIcon: Icon(
-                  Icons.lock,
-                  color: Colors.grey[700],
-                  size: 20.0,
-                ),
-              ),
-            ),
-
+            getPass(),
             SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: RaisedButton(
-                color: Colors.grey,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.0),
-                  side: BorderSide(color: Colors.white),
-                ),
-                child: Text(
-                  "Login",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 23,
-                  ),
-                ),
-                onPressed: () {
-                  //Code for Login
-                  FocusScope.of(context).unfocus();
-                  setState(() {
-                    errmsg = "";
-                    if (email.isEmpty) {
-                      errmsg = "Plese email\n";
-                    }
-                    if (password.isEmpty) {
-                      errmsg += "Plese password";
-                    }
-                  }); //หุบแป้น
-                },
-              ),
-            ),
+            //Raised Button
+            getLoginBt(),
             SizedBox(height: 15),
             Container(
               child: Text(
@@ -115,28 +143,6 @@ class _LoginFormState extends State<LoginForm> {
                 textAlign: TextAlign.start,
                 style: TextStyle(
                   color: Colors.red,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Container(
-              child: Text(
-                email, //Code for Show error message
-                textAlign: TextAlign.start,
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Container(
-              child: Text(
-                password, //Code for Show error message
-                textAlign: TextAlign.start,
-                style: TextStyle(
-                  color: Colors.blue,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
